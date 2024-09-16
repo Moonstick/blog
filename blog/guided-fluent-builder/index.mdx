@@ -1,0 +1,161 @@
+---
+title: "Guided Fluent Builder"
+date: 
+slug: "User abstractions to guide creation of a complex object"
+hero_image: "./builder.jpg"
+hero_image_alt: "A lego builder character"
+hero_image_credit_text: "Marcel Straus"
+hero_image_credit_link: "https://unsplash.com/photos/lego-minifig-on-white-surface-rxGN4Z6wN5s"
+---
+
+Guided Fluent Builder
+=====================
+
+The builder pattern is one of the standard creational patterns identified in the original Gang of Four book. I've often seen an implementation of the builder pattern with a fluent syntax which improves the overall readability but it can be difficult to enforce validation of the created object, other than providing defaults to work with.
+
+This article aims to take a complex object and walk through the process of improving its construction, through factory methods, then using a standard builder implementation, adding a fluent syntax, and then to constraint the implementation so as to ensure that the object being created is in a valid state.
+
+
+The Product
+-----------
+
+For this article we're going to create a response object as returned by an API. The initial implementation of the response objects looks like:
+
+```
+public class ServiceResponse
+{
+    public bool Success { get; set; }
+    public IEnumerable<Error> Errors { get; set; };
+    public IEnumerable<Information> Information { get; set; };
+}
+
+public class ServiceResponse<T> : ServiceResponse where T : class
+{
+    public T? Body { get; set; }
+}
+
+public class Information
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+    public IEnumerable<Data> Data { get; set; }
+}
+
+public class Error : Information
+{
+}
+
+public class Data
+{
+    public string Name { get; set; }
+    public string Value { get; set; }
+    public string Message { get; set; }
+}
+```
+
+There are a few issue with this; it's easy to create a response with an invalid state, we're likely to end up with large object initialisers such as:
+
+```
+var response = new ServiceResponse<Payload>
+{
+    Body = new Payload("value"),
+    Success = true,
+    Errors = [],
+    Information = []
+}
+```
+for a successful response, or
+```
+var response = new ServiceResponse<Payload>
+{
+    Success = false,
+    Errors = [new Error
+        {
+            Code = "ERR_1",
+            Message = "Error 1 occurred",
+            Data = new []{new Data
+            {
+                Name = "request.quantity" ,
+                Value = "xxx",
+                Message = "Quantity should be a whole number"
+            } } 
+        }],
+    Information = []
+};
+```
+for a failed one.
+
+Our usual way of creating an object with a valid state is to use constructors and we can use some of the newer features of C# like primary constructors to come up with a solution like:
+
+```
+public class ServiceResponse
+{
+    private ServiceResponse(bool success) => Success = success;
+    public ServiceResponse() : this(true) => Success = true;
+    public ServiceResponse(IEnumerable<Information> information) : this(true) => Information = information;
+    public ServiceResponse(IEnumerable<Error> errors) : this(false) => Errors = errors;
+
+    public bool Success { get; }
+    public IEnumerable<Error> Errors { get; } = [];
+    public IEnumerable<Information> Information { get; } = [];
+}
+
+public class ServiceResponse<T> : ServiceResponse where T : class
+{
+    public ServiceResponse(T payload) => Body = payload;
+    public ServiceResponse(T payload, IEnumerable<Information> information) : base(information) => Body = payload;
+    public ServiceResponse(IEnumerable<Error> errors) : base(errors) { }
+
+    public T? Body { get; }
+}
+
+public class Information(string code, string message, IEnumerable<Data> data)
+{
+    public string Code { get; } = code;
+    public string Message { get; } = message;
+    public IEnumerable<Data> Data { get; } = data;
+}
+
+public class Error(string code, string message, IEnumerable<Data> data) : Information(code, message, data);
+
+public class Data(string name, string value, string message)
+{
+    public string Name { get; set; } = name;
+    public string Value { get; set; } = value;
+    public string Message { get; set; } = message;
+}
+```
+Now we end up creating our response objects as
+
+'''
+var response = new ServiceResponse<Payload>(new Payload("value"));
+'''
+for a successful response, or
+'''
+var response = new ServiceResponse<Payload>(
+[
+    new Error(
+        "ERR_1",
+        "Error 1 occurred",
+        [
+            new Data(
+                "request.quantity",
+                "xxx",
+                "Quantity should be a whole number")
+        ])
+]);
+```
+for a failed one. This is certainly an improvement, although we lose some information the call site (specifically the naming of parameters, although you could add those in explicitly, or your IDE might add the details), and the code to create failures is going to become unweildly if you have to create multiple errors or information messages.
+
+
+
+
+
+
+This works well but doesn't provide any support to ensure that the response is complete and valid; if a user forgets to set the `Success` field then the response looks to have failed in all cases, or a response could have errors and be declared successful.
+
+
+
+
+You might be saying "that looks like a finite state machine" and you'd be right! This particular one is pretty linear but you can define more complex ones as your solution requires.
+
