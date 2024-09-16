@@ -127,11 +127,11 @@ public class Data(string name, string value, string message)
 ```
 Now we end up creating our response objects as
 
-'''
+```
 var response = new ServiceResponse<Payload>(new Payload("value"));
-'''
+```
 for a successful response, or
-'''
+```
 var response = new ServiceResponse<Payload>(
 [
     new Error(
