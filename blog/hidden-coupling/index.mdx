@@ -1,0 +1,117 @@
+---
+title: "Hidden Coupling"
+date: "2024-12-08"
+slug: "hidden-coupling"
+hero_image: "./links.jpg"
+hero_image_alt: "A lego builder character"
+hero_image_credit_text: "Photo by <a href="https://unsplash.com/@gidlark?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Олександр К</a> on <a href="https://unsplash.com/photos/a-chain-is-shown-in-the-middle-of-the-picture-xrbGiSy_Xp4?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>"
+hero_image_credit_link: "https://unsplash.com/photos/lego-minifig-on-white-surface-rxGN4Z6wN5s"
+---
+
+Hidden Coupling
+===============
+
+I seem to be more concerned about coupling in systems than a lot of the developers I've worked with over the years,and I expect that's mostly because I've had the task of unpicking complexity resulting from that a number of times over the years.
+
+From conversations I've had, other developers are generally more concerned with following a strictly DRY (don't repeat yourself) approach, and in some cases aiming for the most succinct possible solution, which makes sense but given that everything in software engineering is a trade-off, for me feels like it misses the important aspect of coupling.
+
+
+Bundled Dependencies
+--------------------
+
+An approach I've come across a few times is where a class takes too many dependencies and this is recognised as a code smell, usually through static analysis. However, instead of dealing with the issue (which is probably that if a class has too many dependencies, that's probably doing too much and therefore needs to be decomposed) the approach is a hide the dependencies by bundling at least some them up into a class whose only purpose is to act as a container.
+
+Initial Class with too many dependencies:
+```
+public class Service(
+    IDependency1 dependency1,
+    IDependency2 dependency2,
+    IDependency3 dependency3,
+    IDependency4 dependency4,
+    IDependency5 dependency5,
+    IDependency6 dependency6,
+    IDependency7 dependency7,
+    IDependency8 dependency8,
+    IDependency9 dependency9,
+    )
+{
+}
+```
+refactored result:
+```
+public class Service(
+    BundledDependencies bundledDependencies,
+    IDependency7 dependency7,
+    IDependency8 dependency8,
+    IDependency9 dependency9,
+)
+{
+}
+
+public class BundledDependences(
+    
+    IDependency1 dependency1,
+    IDependency2 dependency2,
+    IDependency3 dependency3,
+    IDependency4 dependency4,
+    IDependency5 dependency5,
+    IDependency6 dependency6,
+)
+{    
+}
+```
+This technically satisfies the code rules for number of constructor parameters but now makes it less obvious that the Service class is dependent on quite so many other entities, and doesn't actually address the issue that having too many parameters signals (likely too many reponsibilities).
+
+Bundled Types
+-------------
+
+I see this most often with repository definitions, again as a response to seeing a class taking many consuctor parameters. Normally a respository is defined as a generic type `IRepository<T>` where T is the type (or table, or aggregate root) that the implementation will work for. 
+
+```
+public interface IRepository<T>
+{
+    IEnumerable<T> GetAll();
+    T GetById(int id);
+    int Add(T entity);
+    bool Delete(T entity);
+    bool Update(T entity);
+}
+
+public class Service(
+    IRepository<Order> orderRepository,
+    IRepository<Customer> customerRepository,
+    IRepository<Product> productRepository,
+    IRepository<Shipping> shippingRepository,
+    IRepository<Notifications> notificationRepository,
+    IRepository<Warehouse> warehouseRepository,
+    IRepository<FreightCompany> freightRepository,
+    IRepository<Pricing> pricingRepository,
+    IRepository<User> userRepository
+)
+```
+
+Again the issue is probably that the `Service` class has too many reponsibilities and needs to be decomposed, but the approach I've often seen is to move the generic type to the individual methods and have a single, non-generic repository interface definition:
+
+```
+public interface IRepository
+{
+    IEnumerable<T> GetAll<T>();
+    T GetById<T>(int id);
+    int Add<T>(T entity);
+    bool Delete<T>(T entity);
+    bool Update<T>(T entity);
+}
+
+public class Service(IRepository repository)
+{    
+}
+```
+
+This seems reasonable on the face of it but there is a loss of information, in that it becomes less obvious which data types are being used by each class. We're no longer able to find instances of e.g. `IRepository<Order>`, and while we can search for all instances of each individual method, it's more difficult to aggregate that information for a single type.
+
+Summary
+-------
+
+These are just a couple of examples that I've seen, though I'm sure there are more. The problem is wrapped in a few different concerns; the change is obviously well intentioned but the implementation is focused on fixing the symptom rather than the underlying cause. 
+
+It's also obvious that I'm biased by my own experiences; I've worked on a lot of long-lived codebases over the years and coupling hidden by tactics such as these have made it more challenging to deliver in those scenarios.
