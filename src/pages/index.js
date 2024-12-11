@@ -6,7 +6,7 @@ import Seo from '../components/seo'
 const IndexPage = () => {
   return (
     <Layout pageTitle="Home Page">
-      <p>David O'Brien's personal blog; views expressed here do not represent those of my employer, friends or family.</p>
+      <p>David O'Brien's personal blog; views expressed here are my own and do not represent those of my employer, friends or family.</p>
       <StaticImage
         alt="Clifford, a reddish-brown pitbull, dozing in a bean bag chair"
         src="../images/clifford.jpg"
