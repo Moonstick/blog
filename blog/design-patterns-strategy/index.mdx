@@ -26,9 +26,29 @@ The Strategy pattern is probably one of the most used patterns seen in code base
 Example
 -------
 
-The example we'll use in this case is 
+The example we'll use in this case is an eCommerce store that needs to ship physical items to its customers. These customers could be local, national or international and as such might come and collect their purchase in person, might be shipped nationally through a domestic courier, or might be shipped internationally. We don't want our order process to be concerned so we'll use a factory method to determine which shipping method to use, then we'll dispatch the order  to that.
 
 Potential Implementation
 ------------------------
 
-[NSERT DIAGRAM HERE]
+[INSERT DIAGRAM HERE]
+
+```
+public class OrderClient(IShippingMethodFactory shippingMethodFactory)
+{
+    public Order FinaliseOrder(OrderItems items, Customer customer, Address address)
+    {
+        var order = new Order(customer);
+        order.AddItems(items);
+
+        var shippingMethod = shippingMethodFactory.GetShipmentMethodFor(address);
+        order.SetShippingMethod(shippingMethod);
+
+        return order;
+    }
+}
+
+public interface IShippingMethod
+{
+
+}
