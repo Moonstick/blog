@@ -10,7 +10,7 @@ const AboutPage = () => {
         <div className="flex flex-col sm:flex-row gap-10 items-start mb-10">
           <div className="flex-shrink-0">
             <StaticImage
-              src="../images/Avatar.png"
+              src="../images/photo.jpg"
               alt="David O'Brien"
               width={140}
               height={140}

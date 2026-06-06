@@ -19,9 +19,8 @@ const IndexPage = ({ data }) => {
       <section className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-5xl mx-auto px-6 py-16 flex flex-col sm:flex-row items-center gap-10">
           <div className="flex-shrink-0">
-            {/* Replace src/images/Avatar.png with your real photo to update this */}
             <StaticImage
-              src="../images/Avatar.png"
+              src="../images/photo.jpg"
               alt="David O'Brien"
               width={160}
               height={160}
