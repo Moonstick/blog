@@ -1,0 +1,52 @@
+---
+title: "Your Post Title Here"
+date: "2026-01-15"
+slug: "your-post-slug-here"
+category: "Software Design"
+description: "A one or two sentence summary of what this post covers. This appears in search results and link previews on LinkedIn."
+hero_image: "./hero.jpg"
+hero_image_alt: "Description of the hero image"
+hero_image_credit_text: "Photographer Name on Unsplash"
+hero_image_credit_link: "https://unsplash.com/"
+---
+
+Write your post content here using standard Markdown.
+
+## Headings use ##
+
+Normal paragraphs just need a blank line between them.
+
+```javascript
+// Code blocks use triple backticks with the language name
+const example = "like this"
+```
+
+- Lists work as expected
+- Just use hyphens
+
+> Blockquotes use the > character
+
+**Bold** and *italic* work as standard Markdown.
+
+---
+
+## To create a new post
+
+1. Copy the folder `blog/any-existing-post/` to `blog/your-new-slug/`
+2. Replace the `index.mdx` content with this template
+3. Set `date` to today's date in YYYY-MM-DD format
+4. Set `slug` to match your folder name (lowercase, hyphens)
+5. Add a hero image to the folder and update `hero_image: "./your-image.jpg"`
+6. Write your content below the frontmatter
+7. Commit and push — the post goes live automatically
+
+## Category options
+
+- **Software Design** — design patterns, architecture, code quality
+- **Systems Design** — distributed systems, scalability, interviews
+- **AI** — AI tools, models, applied ML
+- **Personal Projects** — side projects, experiments
+
+## To keep a post as a draft
+
+Set `date:` with no value (leave it empty). Posts without a date are excluded from the listing.
